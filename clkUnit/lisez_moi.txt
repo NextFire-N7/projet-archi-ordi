@@ -1,0 +1,8 @@
+architecture du composant clkUnit à compléter (clkUnit.vhd)
+
+simulation avec un test simple (clkUnit.vhd, testClkUnit.vhd)
+synthèse pour vérifier que le composant développé est synthétisable
+(clkUnit.vhd, diviseurClk1Hz.vhd, Nexys4.vhd, Nexys4.ucf ou Nexys4_DDR.ucf)
+
+simulation et synthèse faciles avec le script n7xilinxhelper.sh
+(attention à choisir le bon ucf)
