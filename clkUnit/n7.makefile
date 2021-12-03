@@ -14,5 +14,5 @@ PLOT = output
 # for synthesis:
 UNIT = Nexys4
 ARCH = synthesis
-#UCF  = Nexys4.ucf
-UCF  = Nexys4_DDR.ucf
+UCF  = Nexys4.ucf
+#UCF  = Nexys4_DDR.ucf
