@@ -23,6 +23,8 @@ architecture behavorial of TxUnit is
     choixReposEmission
   );
 
+  signal etatsUniteEmission : etatsPossiblesUniteEmission;
+
   -- A la base le registre et le buffer sont libres
   signal registreLibre : std_logic;
   signal bufferLibre   : std_logic;
@@ -34,7 +36,6 @@ begin
 
   process (clk, reset)
 
-    variable etatsUniteEmission : etatsPossiblesUniteEmission;
     variable bufferT, registerT : std_logic_vector(7 downto 0);
     variable cpt                : integer;
     variable parite             : std_logic;
@@ -43,12 +44,10 @@ begin
 
     if (reset = '0') then
       -- reset variables
-      bufferT   := (others => '0');
-      registerT := (others => '0');
-      registreLibre <= '1';
-      bufferLibre   <= '1';
-      txd           <= '1';
-      etatsUniteEmission := auRepos;
+      registreLibre      <= '1';
+      bufferLibre        <= '1';
+      txd                <= '1';
+      etatsUniteEmission <= auRepos;
 
     elsif rising_edge(clk) then
       case(etatsUniteEmission) is
@@ -56,76 +55,74 @@ begin
         if (ld = '1') then
           -- preparation de l'emission
           bufferT := data;
-          bufferLibre <= '0';
-          etatsUniteEmission := preparationEmission;
-        else
-          null;
+          bufferLibre        <= '0';
+          etatsUniteEmission <= preparationEmission;
         end if;
 
         when preparationEmission => -- 001
         registerT := bufferT;
-        bufferLibre   <= '1';
-        registreLibre <= '0';
-        etatsUniteEmission := envoiBitDeStart;
+        bufferLibre        <= '1';
+        registreLibre      <= '0';
+        etatsUniteEmission <= envoiBitDeStart;
 
         when envoiBitDeStart => -- 010 possible remettre données dans registre
-        if (enable = '1') then
-          txd <= '0';
-          cpt                := 7;
-          parite             := '0';
-          etatsUniteEmission := emissionOctet;
-        end if;
         -- Vérification nouvelles données en attente
         if (ld = '1' and bufferLibre = '1') then
           bufferT := data;
           bufferLibre <= '0';
         end if;
+        if (enable = '1') then
+          txd <= '0';
+          cpt    := 7;
+          parite := '0';
+          etatsUniteEmission <= emissionOctet;
+        end if;
 
         when emissionOctet => -- 011 possible remettre données dans registre
+        -- Vérification nouvelles données en attente
+        if (ld = '1' and bufferLibre = '1') then
+          bufferT := data;
+          bufferLibre <= '0';
+        end if;
         if (enable = '1') then
           txd <= registerT(cpt);
           parite := parite xor registerT(cpt);
           if (cpt = 0) then
-            registreLibre <= '1';
-            etatsUniteEmission := emissionBitsPariteStop;
+            registreLibre      <= '1';
+            etatsUniteEmission <= emissionBitsPariteStop;
           else
             cpt := cpt - 1;
           end if;
         end if;
-        -- Vérification nouvelles données en attente
-        if (ld = '1' and bufferLibre = '1') then
-          bufferT := data;
-          bufferLibre <= '0';
-        end if;
 
         when emissionBitsPariteStop => -- 100 possible remettre données dans registre
-        -- émission des bits de parité et de stop
-        if (enable = '1') then
-          txd <= parite;
-          etatsUniteEmission := choixReposEmission;
-        end if;
         -- Vérification nouvelles données en attente
         if (ld = '1' and bufferLibre = '1') then
           bufferT := data;
           bufferLibre <= '0';
+        end if;
+        -- émission des bits de parité et de stop
+        if (enable = '1') then
+          txd                <= parite;
+          etatsUniteEmission <= choixReposEmission;
         end if;
 
         when choixReposEmission => -- 101 possible remettre données dans registre
+        -- Vérification nouvelles données en attente (???)
+        if (ld = '1' and bufferLibre = '1') then
+          bufferT := data;
+          bufferLibre <= '0';
+        end if;
         -- choix du branchement si quelque chose est déjà présent dans le buffer
         if (enable = '1') then
           txd <= '1';
           if (bufferLibre = '1') then
             -- retour en idle
-            etatsUniteEmission := auRepos;
+            etatsUniteEmission <= auRepos;
           else
             -- suite émission
-            etatsUniteEmission := preparationEmission;
+            etatsUniteEmission <= preparationEmission;
           end if;
-        end if;
-        -- Vérification nouvelles données en attente (???)
-        if (ld = '1' and bufferLibre = '1') then
-          bufferT := data;
-          bufferLibre <= '0';
         end if;
 
       end case;
