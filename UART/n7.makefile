@@ -5,7 +5,9 @@ SRC = UART_FPGA_N4.vhd \
       ../clkUnit/clkUnit.vhd \
       ctrlUnit.vhd \
       ../TxUnit/TxUnit.vhd \
-      RxUnit.vhd
+      RxUnit.vhd \
+      compteur16.vhd \
+      controleRx.vhd
 
 # for synthesis:
 UNIT = UART_FPGA_N4
