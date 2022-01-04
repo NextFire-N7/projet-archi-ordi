@@ -45,10 +45,6 @@ begin
       tmpClk               <= '0';
       etatsCompteur16Coups <= auRepos;
 
-      ------------------------------------
-      -- On n'envoie rien avec tmpRxd ? --
-      ------------------------------------
-
     elsif (rising_edge(enable)) then
 
       -- On vérifie les états possibles
@@ -76,14 +72,14 @@ begin
         --      1 bit de stop
         --      Entre chaque bit on compte 16 coups d'enable avant d'émettre
         when compter16Coups10fois =>
+        tmpClk <= '0';
         if (compteurBoucleIf < 10) then
           if (compteur16CoupsEnable = 15) then
+            tmpRxd <= rxd;
+            tmpClk <= '1';
             compteur16CoupsEnable := 0;
             compteurBoucleIf      := compteurBoucleIf + 1;
-            tmpClk <= '1';
-            tmpRxd <= rxd;
           else
-            tmpClk <= '0';
             compteur16CoupsEnable := compteur16CoupsEnable + 1;
           end if;
         else

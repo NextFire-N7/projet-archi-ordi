@@ -16,6 +16,17 @@ entity controleRx is
 end controleRx;
 
 architecture arch of controleRx is
+
+  type etats is (
+    REPOS,
+    RECEPTION_DATA,
+    RECEPTION_PARITE,
+    RECEPTION_FIN,
+    ATTENTE_READ
+  );
+
+  signal etat : etats;
+
 begin
 
   process (clk, reset)
@@ -24,9 +35,6 @@ begin
     variable parite : std_logic;
     variable cpt    : integer;
 
-    type etats is (REPOS, RECEPTION_DATA, RECEPTION_VERIF, RECEPTION_FIN, ATTENTE_READ);
-    variable etat : etats;
-
   begin
 
     if reset = '0' then
@@ -34,18 +42,18 @@ begin
       FErr <= '0';
       OErr <= '0';
       DRdy <= '0';
-      etat := REPOS;
+      etat <= REPOS;
 
     elsif rising_edge(clk) then
       case etat is
         when REPOS =>
+          FErr <= '0';
+          OErr <= '0';
+          DRdy <= '0';
           if tmpclk = '1' then
-            FErr <= '0';
-            OErr <= '0';
-            DRdy <= '0';
             parite := '0';
             cpt    := 7;
-            etat   := RECEPTION_DATA;
+            etat <= RECEPTION_DATA;
           end if;
 
         when RECEPTION_DATA =>
@@ -55,20 +63,20 @@ begin
             cpt      := cpt - 1;
 
             if cpt = 0 then
-              etat := RECEPTION_VERIF;
+              etat <= RECEPTION_PARITE;
             else
               cpt := cpt - 1;
             end if;
           end if;
 
-        when RECEPTION_VERIF =>
+        when RECEPTION_PARITE =>
           if tmpclk = '1' then
             if not (tmprxd = parite) then
               FErr <= '1';
             else
               FErr <= '0';
             end if;
-            etat := RECEPTION_FIN;
+            etat <= RECEPTION_FIN;
           end if;
 
         when RECEPTION_FIN =>
@@ -76,11 +84,11 @@ begin
             if not (tmprxd = '1') then
               FErr <= '1';
               DRdy <= '0';
-              etat := REPOS;
+              etat <= REPOS;
             else
               DRdy <= '1';
               data <= buf;
-              etat := ATTENTE_READ;
+              etat <= ATTENTE_READ;
             end if;
           end if;
 
@@ -89,7 +97,7 @@ begin
           if read = '0' then
             OErr <= '1';
           end if;
-          etat := REPOS;
+          etat <= REPOS;
       end case;
 
     end if;
