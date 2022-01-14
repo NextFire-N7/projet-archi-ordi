@@ -121,6 +121,10 @@ begin
     wait for 100 ns;
     reset <= '1';
 
+    ---------------------------------
+    -- PREMIER CAS DE TEST REUSSI  --
+    ---------------------------------
+
     -- repos
     rxd <= '1';
     wait until enableTX = '1';
@@ -129,7 +133,8 @@ begin
     rxd <= '0';
     wait until enableTX = '0';
 
-    message := "01110101";
+    -- La lettre 't' ou '.' doit être affichée (sauf si je me suis trompé)
+    message := "01110100";
     parite  := '0';
 
     -- message
@@ -149,6 +154,76 @@ begin
     -- bit de stop
     rxd <= '1';
     wait until enableTX = '0';
+
+    ---------------------------------
+    -- DEUXIEME CAS DE TEST REUSSI --
+    ---------------------------------
+    wait for 100 ns;
+    -- repos
+    rxd <= '1';
+    wait until enableTX = '1';
+
+    -- bit de start
+    rxd <= '0';
+    wait until enableTX = '0';
+
+    -- La lettre 'f' doit être affichée (sauf si je me suis trompé)
+    message := "01100110";
+    parite  := '0';
+
+    -- message
+    for i in 7 downto 0 loop
+      wait until enableTX = '1';
+      rxd <= message(i);
+      wait until enableTX = '0';
+      parite := parite xor message(i);
+    end loop;
+    wait until enableTX = '1';
+
+    -- bit de parité
+    rxd <= parite;
+    wait until enableTX = '0';
+    wait until enableTX = '1';
+
+    -- bit de stop
+    rxd <= '1';
+    wait until enableTX = '0';
+
+    ---------------------------------
+    --  CAS DE TEST QUI DOIT RATER --
+    ---------------------------------
+    wait for 100 ns;
+    -- repos
+    rxd <= '1';
+    wait until enableTX = '1';
+
+    -- bit de start
+    rxd <= '0';
+    wait until enableTX = '0';
+
+    -- La lettre 'f' NE doit PAS être affichée (sauf si je me suis trompé)
+    message := "01100110";
+    parite  := '0';
+
+    -- message
+    for i in 7 downto 0 loop
+      wait until enableTX = '1';
+      rxd <= message(i);
+      wait until enableTX = '0';
+      parite := parite xor message(i);
+    end loop;
+    wait until enableTX = '1';
+
+    -- bit de parité
+    rxd <= not parite;          --- AJOUT DU FAIL ICI VIA not ; FANIONS LEVES
+    wait until enableTX = '0';
+    wait until enableTX = '1';
+
+    -- bit de stop
+    rxd <= '1';
+    wait until enableTX = '0';
+
+
 
     wait;
   end process;
