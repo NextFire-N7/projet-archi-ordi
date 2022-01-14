@@ -60,7 +60,6 @@ begin
           if tmpclk = '1' then
             buf(cpt) := tmprxd;
             parite   := parite xor buf(cpt);
-            cpt      := cpt - 1;
 
             if cpt = 0 then
               etat <= RECEPTION_PARITE;

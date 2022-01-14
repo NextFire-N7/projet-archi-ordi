@@ -123,32 +123,32 @@ begin
 
     -- repos
     rxd <= '1';
-    wait until enableRX = '1';
+    wait until enableTX = '1';
 
     -- bit de start
     rxd <= '0';
-    wait until enableRX = '0';
+    wait until enableTX = '0';
 
     message := "01110101";
     parite  := '0';
 
     -- message
     for i in 7 downto 0 loop
-      wait until enableRX = '1';
+      wait until enableTX = '1';
       rxd <= message(i);
-      wait until enableRX = '0';
+      wait until enableTX = '0';
       parite := parite xor message(i);
     end loop;
-    wait until enableRX = '1';
+    wait until enableTX = '1';
 
     -- bit de parité
     rxd <= parite;
-    wait until enableRX = '0';
-    wait until enableRX = '1';
+    wait until enableTX = '0';
+    wait until enableTX = '1';
 
     -- bit de stop
     rxd <= '1';
-    wait until enableRX = '0';
+    wait until enableTX = '0';
 
     wait;
   end process;
