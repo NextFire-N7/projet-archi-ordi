@@ -17,6 +17,7 @@ end controleRx;
 
 architecture arch of controleRx is
 
+  -- états de l'automate
   type etats is (
     REPOS,
     RECEPTION_DATA,
@@ -31,13 +32,14 @@ begin
 
   process (clk, reset)
 
-    variable buf    : std_logic_vector(7 downto 0);
-    variable parite : std_logic;
-    variable cpt    : integer;
+    variable buf    : std_logic_vector(7 downto 0); -- buffer data
+    variable parite : std_logic; -- bit de parité
+    variable cpt    : integer; -- compteur
 
   begin
 
     if reset = '0' then
+      -- raz des données et des flags
       data <= (others => '0');
       FErr <= '0';
       OErr <= '0';
@@ -46,17 +48,18 @@ begin
 
     elsif rising_edge(clk) then
       case etat is
-        when REPOS =>
+        when REPOS => -- état au repos
           FErr <= '0';
           OErr <= '0';
           DRdy <= '0';
+          -- début communication
           if tmpclk = '1' then
             parite := '0';
             cpt    := 7;
             etat <= RECEPTION_DATA;
           end if;
 
-        when RECEPTION_DATA =>
+        when RECEPTION_DATA => -- état en réception
           if tmpclk = '1' then
             buf(cpt) := tmprxd;
             parite   := parite xor buf(cpt);
@@ -68,7 +71,7 @@ begin
             end if;
           end if;
 
-        when RECEPTION_PARITE =>
+        when RECEPTION_PARITE => -- réception du bit de parité et check
           if tmpclk = '1' then
             if not (tmprxd = parite) then
               FErr <= '1';
@@ -78,7 +81,7 @@ begin
             etat <= RECEPTION_FIN;
           end if;
 
-        when RECEPTION_FIN =>
+        when RECEPTION_FIN => -- réception bit de fin
           if tmpclk = '1' then
             if not (tmprxd = '1') then
               FErr <= '1';
@@ -91,7 +94,7 @@ begin
             end if;
           end if;
 
-        when ATTENTE_READ =>
+        when ATTENTE_READ => -- attente de la lecture
           DRdy <= '0';
           if read = '0' then
             OErr <= '1';
